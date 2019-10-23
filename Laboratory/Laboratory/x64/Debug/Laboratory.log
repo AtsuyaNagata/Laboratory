@@ -1,2 +1,6 @@
 ﻿  main.cpp
+C:\Users\a_nag\Documents\C++勉強\Laboratory\Laboratory\Laboratory\main.cpp(17,10): warning C4473:  'scanf_s': 書式文字列として渡された引数が不足しています
+C:\Users\a_nag\Documents\C++勉強\Laboratory\Laboratory\Laboratory\main.cpp(17,10): message :  プレースホルダーとそのパラメーターには 2 の可変個引数が必要ですが、1 が指定されています。
+C:\Users\a_nag\Documents\C++勉強\Laboratory\Laboratory\Laboratory\main.cpp(17,10): message :  不足している可変個引数 2 が書式文字列 '%s' に必要です
+C:\Users\a_nag\Documents\C++勉強\Laboratory\Laboratory\Laboratory\main.cpp(17,10): message :  この引数はバッファー サイズとして使用されます
   Laboratory.vcxproj -> C:\Users\a_nag\Documents\C++勉強\Laboratory\Laboratory\x64\Debug\Laboratory.exe

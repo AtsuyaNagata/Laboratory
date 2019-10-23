@@ -12,5 +12,18 @@
     <ClInclude Include="NULLptr.h">
       <Filter>Laboratory</Filter>
     </ClInclude>
+    <ClInclude Include="ascii.h">
+      <Filter>Laboratory</Filter>
+    </ClInclude>
+    <ClInclude Include="Arraysize.h">
+      <Filter>Laboratory</Filter>
+    </ClInclude>
+    <ClInclude Include="Class.h">
+      <Filter>Laboratory</Filter>
+    </ClInclude>
+    <ClInclude Include="functionPtr.h">
+      <Filter>Laboratory</Filter>
+    </ClInclude>
+    <ClInclude Include="CheckDataSize.h" />
   </ItemGroup>
 </Project>
