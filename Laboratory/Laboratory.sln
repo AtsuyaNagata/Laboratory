@@ -4,9 +4,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.29102.190
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Laboratory", "Laboratory\Laboratory.vcxproj", "{0ACADC5B-FDDE-4192-91CE-E7D60A4400D8}"
-	ProjectSection(ProjectDependencies) = postProject
-		{4AAD5E2A-3352-472C-83AA-A8159A0B5D2A} = {4AAD5E2A-3352-472C-83AA-A8159A0B5D2A}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MultiProject", "MultiProject\MultiProject.vcxproj", "{4AAD5E2A-3352-472C-83AA-A8159A0B5D2A}"
 EndProject

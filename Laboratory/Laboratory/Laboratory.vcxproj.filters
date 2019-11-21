@@ -24,6 +24,14 @@
     <ClInclude Include="functionPtr.h">
       <Filter>Laboratory</Filter>
     </ClInclude>
-    <ClInclude Include="CheckDataSize.h" />
+    <ClInclude Include="SQLmodoki.h">
+      <Filter>Laboratory</Filter>
+    </ClInclude>
+    <ClInclude Include="auto.h">
+      <Filter>Laboratory</Filter>
+    </ClInclude>
+    <ClInclude Include="CheckDataSize.h">
+      <Filter>Laboratory</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
