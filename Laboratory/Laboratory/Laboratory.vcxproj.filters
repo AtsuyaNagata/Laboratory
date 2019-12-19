@@ -2,10 +2,16 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="File.cpp">
+      <Filter>Laboratory\File</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Laboratory">
       <UniqueIdentifier>{929c1a6c-02e9-4c17-87d3-a42767add2a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Laboratory\File">
+      <UniqueIdentifier>{7c1d645d-b79a-43c5-a402-de51c35d38b5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -31,6 +37,15 @@
       <Filter>Laboratory</Filter>
     </ClInclude>
     <ClInclude Include="CheckDataSize.h">
+      <Filter>Laboratory</Filter>
+    </ClInclude>
+    <ClInclude Include="File.h">
+      <Filter>Laboratory\File</Filter>
+    </ClInclude>
+    <ClInclude Include="MIDI.h">
+      <Filter>Laboratory\File</Filter>
+    </ClInclude>
+    <ClInclude Include="enumSize.h">
       <Filter>Laboratory</Filter>
     </ClInclude>
   </ItemGroup>

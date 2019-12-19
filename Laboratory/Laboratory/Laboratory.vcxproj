@@ -157,6 +157,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="File.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -165,7 +166,10 @@
     <ClInclude Include="auto.h" />
     <ClInclude Include="CheckDataSize.h" />
     <ClInclude Include="Class.h" />
+    <ClInclude Include="enumSize.h" />
+    <ClInclude Include="File.h" />
     <ClInclude Include="functionPtr.h" />
+    <ClInclude Include="MIDI.h" />
     <ClInclude Include="NULLptr.h" />
     <ClInclude Include="SQLmodoki.h" />
   </ItemGroup>

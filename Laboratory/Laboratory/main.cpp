@@ -68,20 +68,58 @@ int main()
 }
 */
 
-/*
+
 //SQLmodoki
-#include"SQLmodoki.h"
+/*#include"SQLmodoki.h"
 int main()
 {
 	SQLmodoki();
-}
-*/
+}*/
 
 
+/*
 #include "auto.h"
 #include <iostream>
 using namespace std;
 int main()
 {
 	printType();
+}
+*/
+
+/*
+#include <iostream>
+using namespace std;
+
+int main() {
+	int num = 0;
+
+	num += ++num + num++;
+	printf("%d\n", num);
+}
+*/
+
+/*
+#include"enumSize.h"
+
+int main()
+{
+	enumSize();
+}
+*/
+
+#include"MIDI.h"
+
+int main()
+{
+	MIDI midi("forProgram.mid");
+	MIDI::EventLine *evel = midi.getEventLine(0);
+
+	for (int i = 0; i < evel->eventnum; ++i) {
+		//printf("%lx, ", (int)evel->event[i].data);
+		for (int j = 0; j < evel->event[i].datasize; ++j) {
+			printf("%x, ", evel->event[i].data[j]);
+		}
+		printf("\n");
+	}
 }
