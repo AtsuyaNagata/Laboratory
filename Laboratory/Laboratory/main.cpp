@@ -110,11 +110,14 @@ int main()
 
 #include"MIDI.h"
 
+/*MIDI読み込み処理確認
 int main()
 {
 	MIDI midi("forProgram.mid");
-	MIDI::EventLine *evel = midi.getEventLine(0);
 
+	printf("MaxTrackNum = %d\t Resolution = %d\n", midi.getMaxTrackNum(), midi.getResolution());
+
+	MIDI::Track *evel = midi.getTrack(1);
 	for (int i = 0; i < evel->eventnum; ++i) {
 		//printf("%lx, ", (int)evel->event[i].data);
 		for (int j = 0; j < evel->event[i].datasize; ++j) {
@@ -122,4 +125,55 @@ int main()
 		}
 		printf("\n");
 	}
+}*/
+
+//MIDI構造構築確認
+/*
+int main(){
+	MIDI midi{};
+
+	MIDI::MIDINoteEvents noteEvent = new MIDI::MIDINoteEvent[10];
+	for (int i = 0; i < 5; ++i) {
+		noteEvent[2 * i].time = (2 * i) * 960;
+		noteEvent[2 * i].noteNum = 0x3C + i;
+		noteEvent[2 * i].velocity = 0x64;
+
+		noteEvent[2 * i + 1].time = (2 * i + 1) * 960;
+		noteEvent[2 * i + 1].noteNum = 0x3C + i;
+		noteEvent[2 * i + 1].velocity = 0;
+	}
+	midi.createMIDI_oneTrack(noteEvent, 10);
+
+	MIDI::Track* evel = midi.getTrack(0);
+	for (int i = 0; i < evel->eventnum; ++i) {
+		//printf("%lx, ", (int)evel->event[i].data);
+		for (int j = 0; j < evel->event[i].datasize; ++j) {
+			printf("%x, ", evel->event[i].data[j]);
+		}
+		printf("\n");
+	}
+}*/
+
+/*
+#include"OpenAL.h"
+
+int main()
+{
+	playAL();
+
+	return 0;
+}
+*/
+
+/*
+#include "lambda.h"
+int main() {
+	lambdaIndex();
+}*/
+
+
+#include"DeepL.h"
+int main()
+{
+
 }

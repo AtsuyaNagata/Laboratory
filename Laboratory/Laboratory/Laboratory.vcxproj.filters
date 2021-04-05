@@ -30,9 +30,6 @@
     <ClInclude Include="functionPtr.h">
       <Filter>Laboratory</Filter>
     </ClInclude>
-    <ClInclude Include="SQLmodoki.h">
-      <Filter>Laboratory</Filter>
-    </ClInclude>
     <ClInclude Include="auto.h">
       <Filter>Laboratory</Filter>
     </ClInclude>
@@ -46,6 +43,18 @@
       <Filter>Laboratory\File</Filter>
     </ClInclude>
     <ClInclude Include="enumSize.h">
+      <Filter>Laboratory</Filter>
+    </ClInclude>
+    <ClInclude Include="lambda.h">
+      <Filter>Laboratory</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenAL.h">
+      <Filter>Laboratory</Filter>
+    </ClInclude>
+    <ClInclude Include="DeepL.h">
+      <Filter>Laboratory</Filter>
+    </ClInclude>
+    <ClInclude Include="Matrix.h">
       <Filter>Laboratory</Filter>
     </ClInclude>
   </ItemGroup>
