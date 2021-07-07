@@ -1,0 +1,116 @@
+#ifndef CHORDS_H_2021_05_06_
+#define CHORDS_H_2021_05_06_
+
+#include <cstdint>
+#include <vector>
+using namespace std;
+
+//コード列を生成するオブジェクトクラス
+class Chords
+{
+public:
+	enum class Scale : unsigned char {
+		Major,
+		Minor,
+		HarmonicMinor,
+		MelodicMinor
+	};
+
+	//----------コードの種類の識別子----------
+	//基本的な3和音によるコードの種類
+	enum class ChordType : unsigned char {
+		None,
+
+		Major,							//メジャーコードを表す
+		Minor,							//マイナーコードを表す
+		Sus4,							//3度の音を上げて完全四度(P4)にする(基底音から5つ上)
+		Sus2,							//3度の音を下げて長二度(M2)にする(基底音から2つ上)
+		Aug,							//メジャーコードの完全5度(P5)を半音上げる(基底音から8つ上)->クリシェ(一音だけ変えていく進行)に使う
+		mb5,							//マイナーフラットファイブを表す(マイナーコードの完全5度を半音下げた音)
+	};
+
+	//コードの種類のうち、4音目を用いる時の付加情報を表す
+	enum class ChordPlus : unsigned char {
+		None,							//付加なし
+
+		Seventh,						//セブンス(短7度)
+		MajorSeventh,					//メジャーセブンス(長7度)
+		Six,							//長6度の音を付加する(マイナーっぽい雰囲気をだせる)
+		Add9,							//9度(2度)の音を加える
+		Add11,							//11度(4度)の音を加える
+		Add13,							//13度(6度)の音を加える
+		Dim7,							//m♭5のときのみ付加可能、7thを半音下げた音を加える
+	};
+
+	//5つ目の音を付加する時のパターン
+	enum class ChordTension : unsigned char {
+		None,							//付加なし
+
+		Ninth,							//9th	(長9度)
+		FlatNinth,						//♭9th	(短9度)
+		SharpNinth,						//#9th	(増9度[短10度])
+		Eleventh,						//11th	(完全11度)
+		SharpEleventh,					//#11th	(増11度)
+		Thirteenth,						//13th	(長13度)
+		FlatThirteenth,					//♭13th(短13度)
+	};
+	//---------------------------------------
+
+	//================7CM理論================
+	/*
+	//束を表現した列挙子
+	enum class Bundle : unsigned char {
+
+	};
+	*/
+	/*typedef struct SevenCM {
+	* uint8_t simpleFrequencies;		//簡易度数類(0～6で7つの音を表現する)
+	}SevenCM;
+	*/
+
+	typedef struct Chord {
+		ChordType type;					//3和音のコードの種類
+		ChordPlus plus;					//4つの音を用いるコードの付加情報を表す
+		ChordTension tension;			//5つの音を用いるときの付加情報を表す
+		uint8_t baseNoteNum;			//基底の音(オンコードは一旦考えず、元のコードの基底音を指す 例：キーがCの時のC/G -> 60 + 4 = 64でなく 60 + 0 = 60[GでなくC])
+		uint8_t baseIndex;				//キーから何番目が基底となっているかを表す(値の範囲：0～11)
+		uint8_t onIndex;				//オンコード (基底音が違うコード 例:C/G ベースラインを常に上昇させたい時などに使う) の場合に基底となる音を指定するためのインデックス値(値の範囲：0～11)
+		uint8_t omitIndex;				//Omitコード (コード内の特定の音を一音消したコード) (0～12 12以上の値は無効な値を表すことにする)
+	}Chord;
+
+	//コンストラクタ
+	Chords();
+	//デストラクタ
+	~Chords();
+
+	//コードを生成する関数
+	void create(int barNum, int key, Scale scale);	//生成するコードの数を引数に取る
+	void create7CM(int barNum);										//7CM理論を用いてコードを生成するアルゴリズム
+
+	vector<Chord> getChords() {
+		return mChords;
+	}
+	const int* getFloor() {
+		return mFloor;
+	}
+	int getBaseNoteNum() {
+		return mBaseNoteNum;
+	}
+	
+
+private:
+	//生成の際に必要なメンバ
+	vector<Chord> mChords;				//コード列を表現する配列
+	int* mFloor;						//階名を表現する配列が格納される(サイズは7で固定)
+	int mBaseNoteNum;					//生成するコードの基準となるオクターブのCの高さが格納される
+
+	//コードの生成に正と負の傾きを表す値を設けてみるとどうなる？
+
+	//アルゴリズムに用いる便利な関数群
+	Chord makeSimpleChord(int baseIndex);							//コードの構造にシンプルな値を格納する処理
+	Chord makeChordFromPrev(Chord chord);							//前のコードから次のコードを生成する関数
+	ChordType specificChord(int is1, int is2, int is3);				//内音3つからコードの種類を特定する関数
+
+};
+
+#endif

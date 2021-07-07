@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "makeWindow", "makeWindow\ma
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MIDIWrite", "MIDIWrite\MIDIWrite.vcxproj", "{4F4C4414-F41E-4AAD-A2F9-C4236735923E}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MusicStructureGeneration", "MusicStructureGeneration\MusicStructureGeneration.vcxproj", "{7873F267-5B66-4726-9482-BBB94C841292}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -51,6 +53,14 @@ Global
 		{4F4C4414-F41E-4AAD-A2F9-C4236735923E}.Release|x64.Build.0 = Release|x64
 		{4F4C4414-F41E-4AAD-A2F9-C4236735923E}.Release|x86.ActiveCfg = Release|Win32
 		{4F4C4414-F41E-4AAD-A2F9-C4236735923E}.Release|x86.Build.0 = Release|Win32
+		{7873F267-5B66-4726-9482-BBB94C841292}.Debug|x64.ActiveCfg = Debug|x64
+		{7873F267-5B66-4726-9482-BBB94C841292}.Debug|x64.Build.0 = Debug|x64
+		{7873F267-5B66-4726-9482-BBB94C841292}.Debug|x86.ActiveCfg = Debug|Win32
+		{7873F267-5B66-4726-9482-BBB94C841292}.Debug|x86.Build.0 = Debug|Win32
+		{7873F267-5B66-4726-9482-BBB94C841292}.Release|x64.ActiveCfg = Release|x64
+		{7873F267-5B66-4726-9482-BBB94C841292}.Release|x64.Build.0 = Release|x64
+		{7873F267-5B66-4726-9482-BBB94C841292}.Release|x86.ActiveCfg = Release|Win32
+		{7873F267-5B66-4726-9482-BBB94C841292}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

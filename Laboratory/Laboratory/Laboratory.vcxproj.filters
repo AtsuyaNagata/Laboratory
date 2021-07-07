@@ -57,5 +57,8 @@
     <ClInclude Include="Matrix.h">
       <Filter>Laboratory</Filter>
     </ClInclude>
+    <ClInclude Include="mapCheck.h">
+      <Filter>Laboratory</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

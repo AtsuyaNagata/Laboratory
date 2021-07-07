@@ -172,8 +172,8 @@ int main() {
 }*/
 
 
-#include"DeepL.h"
+#include "mapCheck.h"
 int main()
 {
-
+	mapCheck();
 }
