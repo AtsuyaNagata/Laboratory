@@ -8,27 +8,57 @@ using namespace std;
 class RhythmPattern
 {
 public:
-	//ある一つのリズム要素を表す構造(メロディやドラムのパターンなどに使う予定)
-	typedef struct Rhythm {
+	enum class DrumPattern : unsigned char {
+		None,
+
+		BasicDownBeat8,			//基本8ビート
+		BasicUpBeat8,			//基本8ビート裏打ち(よくサビに用いられる)
+		SlipBeat8,				//スリップ8ビート(スネアが8分音符裏にあったりするリズムパターン)
+		ShuffleBeat,			//シャッフルビート(4拍×3を3拍×4のように考えるリズムパターン。2拍目と4拍目にバックビート(スネアの強)が入る)
+		HalfTimeShuffle,		//ハーフタイムシャッフルビート(チタチ チタチ タタチ チタチ のリズムパターン)[ハーフタイムタイムは3拍目にバックビートが入る意味合い]
+	};
+
+	enum class RhythmType : unsigned char {
+		None,
+
+		Melody,
+		BassDrum,
+		CloseHiHatCymbal,
+		OpenHiHatCymbal,
+		SnareDrum,
+		Tom,
+		FloorTom,
+		CrashCymbal,
+		RideCymbal
+	};
+
+	//ある一つのリズム要素の位置を表す構造(メロディやドラムのパターンなどに使う予定)
+	typedef struct Position {
 		uint32_t length;			//音の長さ(256で四分音符一つ分を表現する)
 		uint32_t startTime;			//音の開始地点(256で四分音符一つ分)
-		bool on;					//休符か音符かの判定
+	}Position;
+
+	typedef struct Rhythm {
+		RhythmType type;			//リズムの種類
+		vector<Position> position;		//リズムの位置の集合
 	} Rhythm;
 
 	//コンストラクタ
 	RhythmPattern();
 	~RhythmPattern();
 
-	//分割アルゴリズムによって生成するリズムパターン
-	void create(int size, int mostSmall);
-	void createSplitRhythmPattern(int size, int mostSmall);		//第一引数：生成する音の長さのサイズ、第二引数：生成するパターンの最小音符
+	//分割アルゴリズムによって生成するメロディリズムパターン
+	void createMelodyRhythm(int size, int mostSmall);
+	void createSplitRhythmPattern_melody(int size, int mostSmall);		//第一引数：生成する音の長さのサイズ、第二引数：生成するパターンの最小音符
+
+	void createDrumRhythm(DrumPattern drumPattern, uint32_t length, bool fillIn);		//ドラムのパターンを生成する関数
 
 	vector<Rhythm> getRhythmPattern() {
-		return mRhythmPattern;
+		return mRhythm;
 	}
 
 private:
-	vector<Rhythm> mRhythmPattern;								//各Rhythm構造のlengthが一列に並んでいるイメージでリズムパターンを表現する
+	vector<Rhythm> mRhythm;								//各Rhythm構造のlengthが一列に並んでいるイメージでリズムパターンを表現する
 };
 
 #endif
