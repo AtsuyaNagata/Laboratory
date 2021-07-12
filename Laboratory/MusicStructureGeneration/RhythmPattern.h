@@ -47,17 +47,17 @@ public:
 	RhythmPattern();
 	~RhythmPattern();
 
-	//分割アルゴリズムによって生成するメロディリズムパターン
-	void createMelodyRhythm(int size, int mostSmall);
-	void createSplitRhythmPattern_melody(int size, int mostSmall);		//第一引数：生成する音の長さのサイズ、第二引数：生成するパターンの最小音符
-
+	
+	void createMelodyRhythm(int size, int mostSmall);									//現在は分割アルゴリズムによって生成するメロディリズムパターンが動作してる
 	void createDrumRhythm(DrumPattern drumPattern, uint32_t length, bool fillIn);		//ドラムのパターンを生成する関数
 
-	vector<Rhythm> getRhythmPattern() {
+	vector<Rhythm> getRhythmPattern() const {
 		return mRhythm;
 	}
 
 private:
+	void createSplitRhythmPattern_melody(int size, int mostSmall);		//第一引数：生成する音の長さのサイズ、第二引数：生成するパターンの最小音符
+
 	vector<Rhythm> mRhythm;								//各Rhythm構造のlengthが一列に並んでいるイメージでリズムパターンを表現する
 };
 

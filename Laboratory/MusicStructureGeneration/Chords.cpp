@@ -17,15 +17,18 @@ Chords::~Chords()
 }
 
 //音楽理論からコードを生成するアルゴリズム
-void Chords::create(int barNum, int key, Scale scale)
+void Chords::create(int chordNum, uint32_t length, int key, Scale scale)
 {
 	//初期化処理
 	mChords.clear();
 
 	//入力で受け取った小節数が最低数以下なら、なにもせず落とす
-	if (barNum < 1) {
+	if (chordNum < 1) {
 		return;
 	}
+
+	mLength = length;
+	mChordNum = chordNum;
 
 	//スケールからメインで使用する7音を設定する処理
 	for (int i = 0; i < 7; ++i) { 
@@ -82,7 +85,7 @@ void Chords::create(int barNum, int key, Scale scale)
 	//最初のコードをコード列にプッシュする
 	mChords.push_back(chord);
 
-	for(int i = 0; i < barNum - 1; ++i) {				//開始時点に一つ追加したコード分を引いて生成ループを行う
+	for(int i = 0; i < chordNum - 1; ++i) {				//開始時点に一つ追加したコード分を引いて生成ループを行う
 		chord = makeChordFromPrev(chord);				//前回のコードの値から次のコードを生成する
 		mChords.push_back(chord);						//生成したコードをコード列の最後尾に追加
 	}
@@ -122,11 +125,13 @@ Chords::Chord Chords::makeSimpleChord(int baseIndex)
 	//3和音の音に必要なパラメータを設定する
 	chord.baseNoteNum = mBaseNoteNum + is1;
 	chord.baseIndex = mFloor[baseIndex];
-	chord.onIndex = mFloor[baseIndex];							//baseIndexと値が一致していたらonIndexは考えないという事
+	chord.onIndex = mFloor[baseIndex];					//baseIndexと値が一致していたらonIndexは考えないという事
 	chord.omitIndex = 12;								//12はOmitを無効化する値
 	chord.type = specificChord(is1, is2, is3);			//内音からコードのタイプを判別する
-	chord.plus = ChordPlus::None;
-	chord.tension = ChordTension::None;
+	chord.plus = ChordPlus::None;						//付加情報は一旦何も入れない
+	chord.tension = ChordTension::None;					//上に同じ
+
+	chord.length = mLength / mChordNum;					//長さは均等に配分する形で決定している
 
 	return chord;
 }

@@ -4,14 +4,20 @@
 #include <cstdint>
 #include "Chords.h"
 #include "RhythmPattern.h"
+#include "Melody.h"
 using namespace std;
-
-class Melody;
 
 //音楽構造を取り扱うクラス。生成処理も含む
 class MusicStructure
 {
 public:
+	enum class Scale : unsigned char {
+		Major,
+		Minor,
+		HarmonicMinor,
+		MelodicMinor
+	};
+
 	//曲のパートの種類を表現するための列挙子
 	enum class Part : unsigned char {
 		None,					//存在しないことを表す(初期値用)
@@ -28,7 +34,7 @@ public:
 	};
 
 	//リズムパターンの種類を表現するための列挙
-	enum class Rhythm : unsigned char {
+	enum class RhythmType : unsigned char {
 		None,
 
 		BasicDownBeat8,			//基本8ビート
@@ -65,17 +71,17 @@ public:
 	};
 	
 	//ドラムに含まれる楽器の種類の列挙
-	enum class Drum : unsigned char {
+	enum class DrumType : unsigned char {
 		None,
 
-		BassDrum,
-		CloseHiHatCymbal,
-		OpenHiHatCymbal,
-		SnareDrum,
-		Tom,
-		FloorTom,
-		CrashCymbal,
-		RideCymbal,
+		BassDrum,				//インデックス値：0
+		CloseHiHatCymbal,		//インデックス値：1
+		OpenHiHatCymbal,		//インデックス値：2
+		SnareDrum,				//インデックス値：3
+		Tom,					//インデックス値：4
+		FloorTom,				//インデックス値：5
+		CrashCymbal,			//インデックス値：6
+		RideCymbal,				//インデックス値：7
 
 		Other					//特殊な音等を入れる際に用いる(現在は考えない)
 	};
@@ -90,7 +96,7 @@ public:
 		AudioMaterial			//音声素材といった意味合い
 	};
 
-	enum class Base : unsigned char {
+	enum class BaseAlgorithm : unsigned char {
 		None,
 
 		Simple,					//コードの基底音をひたすら流すだけ
@@ -98,6 +104,12 @@ public:
 		Melo					//メロディ風に遷移するベースラインを作る
 	};
 
+
+	typedef struct Note {
+		uint8_t num;			//ノートの番号の配列
+		uint32_t length;		//ノートの長さの配列(noteNumsとサイズは一致する)
+		uint32_t startTime;			//ノートの開始時点の配列
+	}Note;
 
 	//曲のパートを表現する構造
 	typedef struct PartStruct {
@@ -108,14 +120,14 @@ public:
 
 	//あるドラム楽器についてのリズムパターンを格納する構造
 	typedef struct DrumPattern {
-		Drum drum;							//鳴らすドラムの種類
+		DrumType type;						//鳴らすドラムの種類
 		vector<uint32_t> startTimes;		//各音の開始地点を格納する
 		//各音は32分音符の長さの音として出力することにした
 	};
 
 	//あるパートのリズムパターンを表現する構造
 	typedef struct RhythmStruct {
-		Rhythm type;						//リズムの種類
+		RhythmType type;					//リズムの種類
 		bool fill_in;						//最後にフィルインが入ってるかどうか
 		vector<DrumPattern> drumPatterns;	//各ドラム楽器のリズムパターンを格納する構造
 	}RhythmStruct;
@@ -124,60 +136,62 @@ public:
 	typedef struct ChordStruct {
 		ChordAlgorithm type;				//コード生成アルゴリズムの種類
 		vector<Chords::Chord> chords;		//コード列
-		vector<uint32_t> lengths;			//各コードの長さ
 	} ChordStruct;
 
 	//あるパートのメロディラインについての情報
 	typedef struct MelodyStruct {
 		MelodyAlgorithm type;				//メロディ生成アルゴリズムの種類
-		vector<uint8_t> noteNums;			//ノートの番号の配列(メロディの各音の高さの遷移を表現する)
-		vector<uint32_t> noteLengths;		//ノートの長さの配列(noteNumsとサイズは一致する)
-		vector<uint32_t> noteTime;			//ノートの開始時点の配列
+		vector<Note> notes;					//ノート情報
 	}MelodyStruct;
 
 	typedef struct BaseStruct {
-		Base type;							//ベースラインの種類
-		vector<uint8_t> noteNums;			//ノート番号の配列
-		vector<uint32_t> noteLength;		//ノートの長さの配列
-		vector<uint32_t> noteTime;			//ノートの開始時点の配列
+		BaseAlgorithm type;							//ベースラインの種類
+		vector<Note> notes;					//ノート情報
 	};
 
-	//オブリガードの構造
+	//オブリガートの構造
 	typedef struct ObbligatoStruct {
 		Obbligato type;						//オブリガードの種類を表す
 		Instrument instrument;				//楽器の種類
-		uint32_t startTime;						//開始地点
-		vector<uint8_t> noteNums;			//ノートの番号の配列
-		vector<uint32_t> noteLengths;		//ノートの長さの配列(noteNumsとサイズは一致する)
-		vector<uint32_t> noteTime;			//ノートの開始時点の配列
+		uint32_t startTime;					//開始地点
+		vector<Note> notes;					//ノート情報
 	}ObbligatoStruct;
 
 	//曲の構造を示す設計図のような構造
 	typedef struct MusicStruct {
 		int key;							//曲全体のキー(0～11で表現される。0はC)
+		Scale scale;						//スケールを表現する
 		uint32_t length;					//曲全体の長さ
-		vector<PartStruct> part;			//パート情報の列を格納(構造完成時に時間順でソートされてることが前提となってる)
-		vector<RhythmStruct> rhythm;		//リズム情報の列(パートに対応して並ぶ)
-		vector<ChordStruct> chord;			//コード情報の列(パートに対応して並ぶ)
-		vector<MelodyStruct> melody;		//メロディ構造の配列(パートに対応して並ぶ)
-		vector<BaseStruct> base;			//ベース構造の配列(パートに対応して並ぶ)
+		vector<PartStruct> parts;			//パート情報の列を格納(構造完成時に時間順でソートされてることが前提となってる)
+		vector<RhythmStruct> rhythms;		//リズム情報の列(パートに対応して並ぶ)
+		vector<ChordStruct> chords;			//コード情報の列(パートに対応して並ぶ)
+		vector<MelodyStruct> melodys;		//メロディ構造の配列(パートに対応して並ぶ)
+		vector<BaseStruct> bases;			//ベース構造の配列(パートに対応して並ぶ)
 		vector<ObbligatoStruct> obbligatos;	//オブリガードの列(パートに依存しない、数も任意)
 	};
 
 	//必要なデータ：キー、音楽のパート進行、区間の長さ、コードパターン(ギター、ピアノなど楽器に対応させる予定)、リズムパターン、メロディパターン、ベースライン
-	MusicStructure(int key, vector<MusicStructure::Part> parts, vector<uint32_t> lengths, vector<Rhythm> rhythms, vector<ChordAlgorithm> chordAls, vector<MelodyAlgorithm>meloAls, vector<Base> bases);
-	MusicStructure(const MusicStruct& mus);			//設計図を受け取ってそれをそのまま使って初期化するコンストラクタ。多分使わない
-	MusicStructure();								//空の要素を宣言するためのコンストラクタ。生成を行う際にはprepareメンバ関数を別で呼び出す必要がある
+	MusicStructure(int key, Scale scale, vector<MusicStructure::Part> parts, vector<uint32_t> lengths, vector<RhythmType> rhythms, vector<ChordAlgorithm> chordAls, vector<MelodyAlgorithm>meloAls, vector<BaseAlgorithm> baseAls);
+	//設計図を受け取ってそれをそのまま使って初期化するコンストラクタ。多分使わない
+	MusicStructure(const MusicStruct& mus);
+	//空の要素を宣言するためのコンストラクタ。生成を行う際にはprepareメンバ関数を別で呼び出す必要がある
+	MusicStructure();
+	
+	~MusicStructure();						//デストラクタ
 
-	~MusicStructure();
-
-	void prepare(int key, vector<MusicStructure::Part> parts, vector<uint32_t> lengths, vector<Rhythm> rhythms, vector<ChordAlgorithm> chordAls, vector<MelodyAlgorithm>meloAls, vector<Base> bases);
+	//引数から構造を構築する処理を行う
+	void prepare(int key, Scale scale, vector<MusicStructure::Part> parts, vector<uint32_t> lengths, vector<RhythmType> rhythms, vector<ChordAlgorithm> chordAls, vector<MelodyAlgorithm>meloAls, vector<BaseAlgorithm> baseAls);
 
 	void create();							//曲を制作する(リズム、コード、メロディ、ベース)
-	void addObbligato();					//現在の曲を参照しながら、指定されたオブリガードの追加を行う処理(を実装する予定)
+	void addObbligato();					//現在の曲を参照しながら、指定されたオブリガートの追加を行う処理(を実装する予定)
+
+	void printMusicStruct();				//曲構造を表示する関数
 
 private:
 	MusicStruct* mMusicStruct;				//曲の設計図
+	RhythmPattern* mRhythmPattern;			//リズムパターンを生成、管理するオブジェクト
+	Chords* mChords;						//コード列を生成、管理するオブジェクト
+	Melody* mMelody;						//メロディを生成、管理するオブジェクト
 };
 
 #endif
