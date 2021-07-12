@@ -10,6 +10,8 @@ class Chords
 {
 public:
 	enum class Scale : unsigned char {
+		None,
+
 		Major,
 		Minor,
 		HarmonicMinor,
@@ -19,7 +21,7 @@ public:
 	//----------コードの種類の識別子----------
 	//基本的な3和音によるコードの種類
 	enum class ChordType : unsigned char {
-		None,
+		None,							//「コードなし」を表現する(現在は発生しないはず)
 
 		Major,							//メジャーコードを表す
 		Minor,							//マイナーコードを表す
@@ -76,6 +78,7 @@ public:
 		uint8_t baseIndex;				//キーから何番目が基底となっているかを表す(値の範囲：0～11)
 		uint8_t onIndex;				//オンコード (基底音が違うコード 例:C/G ベースラインを常に上昇させたい時などに使う) の場合に基底となる音を指定するためのインデックス値(値の範囲：0～11)
 		uint8_t omitIndex;				//Omitコード (コード内の特定の音を一音消したコード) (0～12 12以上の値は無効な値を表すことにする)
+		uint32_t length;				//コードの長さ(四分音符一つ分：256)
 	}Chord;
 
 	//コンストラクタ
@@ -84,17 +87,20 @@ public:
 	~Chords();
 
 	//コードを生成する関数
-	void create(int barNum, int key, Scale scale);	//生成するコードの数を引数に取る
+	void create(int chordNum, uint32_t length, int key, Scale scale);					//生成するコードの数、生成するコードの長さ(256で四分音符一つ分の長さ)、キー、スケールを引数に取る
 	void create7CM(int barNum);										//7CM理論を用いてコードを生成するアルゴリズム
 
-	vector<Chord> getChords() {
+	const vector<Chord> getChords() const {
 		return mChords;
 	}
-	const int* getFloor() {
+	const int* getFloor() const {
 		return mFloor;
 	}
-	int getBaseNoteNum() {
+	const int getBaseNoteNum() const {
 		return mBaseNoteNum;
+	}
+	const uint32_t getLength() const {
+		return mLength;
 	}
 	
 
@@ -103,6 +109,9 @@ private:
 	vector<Chord> mChords;				//コード列を表現する配列
 	int* mFloor;						//階名を表現する配列が格納される(サイズは7で固定)
 	int mBaseNoteNum;					//生成するコードの基準となるオクターブのCの高さが格納される
+	int mChordNum;						//生成するコードの数を格納する(mChordsが完成する前に必要なものとして宣言されたメンバ)
+	uint32_t mLength;					//コード列全体の長さを格納する
+
 
 	//コードの生成に正と負の傾きを表す値を設けてみるとどうなる？
 
