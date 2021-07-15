@@ -159,7 +159,7 @@ void MusicStructure::create()
 			scale = Chords::Scale::MelodicMinor;
 		}
 		//コードの生成関数を呼び出す
-		mChords->create(parts[i].length / (256 * 4), parts[i].length, mMusicStruct->key, scale);
+		mChords->create(parts[i].length / (256 * 4), parts[i].length, mMusicStruct->key, scale, Chords::Algorithm::Fashionable);
 		//生成したコードを用いて曲の設計図のデータを埋める
 		cs.chords = mChords->getChords();
 		//cout << "end of chord" << endl;
@@ -363,16 +363,43 @@ vector<MusicStructure::Note> MusicStructure::chordToNote(vector<Chords::Chord> c
 
 		//4音目のノートが存在するコードだったら、コードのノート群に4音目をさらに追加する
 		if (chords[i].plus == Chords::ChordPlus::Add9) {
-			note.num = chords[i].baseNoteNum + mChords->getFloor()[1];			//9度を入れたいが高すぎるので、オクターブ下の2度を入れる
-			chordNotes.push_back(note);
+			for (int j = 0; j < 7; ++j) {
+				if (chords[i].baseIndex == mChords->getFloor()[j]) {
+					uint8_t floorBuff = mChords->getFloor()[(j + 1) % 7] + 12 - mChords->getFloor()[j];		//相対的に見て2度の位置にノートを追加するために差を計算する
+					if (floorBuff > 12) {
+						floorBuff -= 12;
+					}
+					note.num = chords[i].baseNoteNum + floorBuff;							//9度を入れたいが高すぎるので、オクターブ下の2度を入れる
+					chordNotes.push_back(note);
+					break;
+				}
+			}
 		}
 		else if (chords[i].plus == Chords::ChordPlus::Add11) {
-			note.num = chords[i].baseNoteNum + mChords->getFloor()[3];			//11度を入れたいが高すぎるので、オクターブ下の4度を入れる
-			chordNotes.push_back(note);
+			for (int j = 0; j < 7; ++j) {
+				if (chords[i].baseIndex == mChords->getFloor()[j]) {
+					uint8_t floorBuff = mChords->getFloor()[(j + 1) % 7] + 12 - mChords->getFloor()[j];		//相対的に見て4度の位置にノートを追加するために差を計算する
+					if (floorBuff > 12) {
+						floorBuff -= 12;
+					}
+					note.num = chords[i].baseNoteNum + floorBuff;			//11度を入れたいが高すぎるので、オクターブ下の4度を入れる
+					chordNotes.push_back(note);
+					break;
+				}
+			}
 		}
 		else if (chords[i].plus == Chords::ChordPlus::Add13) {
-			note.num = chords[i].baseNoteNum + mChords->getFloor()[5];			//13度を入れたいが高すぎるので、オクターブ下の6度を入れる
-			chordNotes.push_back(note);
+			for (int j = 0; j < 7; ++j) {
+				if (chords[i].baseIndex == mChords->getFloor()[j]) {
+					uint8_t floorBuff = mChords->getFloor()[(j + 1) % 7] + 12 - mChords->getFloor()[j];		//相対的に見て6度の位置にノートを追加するために差を計算する
+					if (floorBuff > 12) {
+						floorBuff -= 12;
+					}
+					note.num = chords[i].baseNoteNum + floorBuff;			//13度を入れたいが高すぎるので、オクターブ下の6度を入れる
+					chordNotes.push_back(note);
+					break;
+				}
+			}
 		}
 		else if (chords[i].plus == Chords::ChordPlus::Dim7) {
 			if (chords[i].type == Chords::ChordType::mb5) {						//3和音がマイナー♭ファイブでなければDimは無効化される
