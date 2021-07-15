@@ -1,6 +1,8 @@
 #include "Melody.h"
 #include "Chords.h"
 #include "RhythmPattern.h"
+#include <iostream>
+#include <algorithm>
 
 Melody::Melody() {
 
@@ -59,10 +61,26 @@ void Melody::createMelody(const RhythmPattern* rhythmPattern, const Chords* chor
 		Chords::Chord chord = chords[nowChordIndex];					//今回の周回においてのコード構造を抽出
 
 		Note note;														//ノートの値を一時的においておくバッファ
+		note.velocity = 100;											//複雑な音量調整は今は考えない
 		note.startTime = rhythm.position[i].startTime;					//リズムデータから開始地点と長さを格納する
 		note.length = rhythm.position[i].length;						//上に同じ
 
-		int baseIndex = chord.baseIndex;								//コードの基底のインデックス値を獲得しておく
+		//コードの基底のインデックス値を獲得しておく
+		int baseIndex = -1;
+		for (int j = 0; j < 7; ++j) {
+			if (floor[j] == chord.baseIndex) {
+				baseIndex = j;
+				break;
+			}
+		}
+		//もし階数に含まれない音がコードの基底音だった場合、そのコードの内音を適当に選んで決定する(仮アルゴリズムとして実装してる)
+		if (baseIndex == -1) {
+			int randBuff = (std::rand() - 1) * 3 / RAND_MAX;				//一時的なバッファ
+			index = (baseIndex + ((randBuff == 0) ? 0 : ((randBuff == 1) ? 2 : 4))) % 7;	//内音を選択するための式
+			note.num = baseNoteNum + chord.baseIndex + floor[index];
+			mNotes.push_back(note);
+			continue;
+		}
 
 		//==========メインのメロディ生成処理==========
 		int randState = (std::rand() - 1) * 100 / RAND_MAX;						//メロディの状態遷移を決定するための乱数値(0から99までの値が出る)
@@ -270,10 +288,22 @@ void Melody::createBaseMelody(const RhythmPattern* rhythmPattern, const Chords* 
 		Chords::Chord chord = chords[nowChordIndex];					//今回の周回においてのコード構造を抽出
 
 		Note note;														//ノートの値を一時的においておくバッファ
+		note.velocity = 100;			//複雑な音量調整は今は考えない
 		note.startTime = rhythm.position[i].startTime;					//リズムデータから開始地点と長さを格納する
 		note.length = rhythm.position[i].length;						//上に同じ
 
-		int baseIndex = chord.baseIndex;								//コードの基底のインデックス値を獲得しておく
+		int baseIndex = - 1;								//コードの基底のノート値を獲得しておく
+		for (int j = 0; j < 7; ++j) {
+			if (floor[j] == chord.baseIndex) {
+				baseIndex = j;
+				break;
+			}
+		}
+		//コードの基底音が階数似ない時の仮アルゴリズム
+		if (baseIndex == -1) {
+			note.num = baseIndex + chord.baseIndex;
+			mNotes.push_back(note); continue;
+		}
 
 		//==========メインのメロディ生成処理==========
 		//80％の確率で前回のノート値を参照して値を出す
@@ -294,11 +324,60 @@ void Melody::createBaseMelody(const RhythmPattern* rhythmPattern, const Chords* 
 				index = 0;
 			}
 		}
-		note.num = baseNoteNum + floor[baseIndex + index];
+		note.num = baseNoteNum + floor[(baseIndex + index) % 7];
 
 		//確定したノートの高さをMelodyのノートとしてプッシュする
+		
 		mNotes.push_back(note);
 	}
 
 	return;
+}
+
+void Melody::createDrum(const RhythmPattern* rhythmPattern)
+{
+	//最初に削除処理をしておく
+	mNotes.clear();
+
+	vector<RhythmPattern::Rhythm> rhythms = rhythmPattern->getRhythmPattern();
+	//渡されたデータがドラムセットのサイズと一致していなければ
+	if (!(rhythms.size() >= 7 && rhythmPattern->getRhythmPattern().size() <= 9)) {
+		return;
+	}
+	for (int i = 0; i < rhythms.size(); ++i) {
+		Note note;
+		if (rhythms[i].type == RhythmPattern::RhythmType::BassDrum) {
+			note.num = 36;					//GM配列に従ってバスドラムのノート番号を設定
+		}
+		else if (rhythms[i].type == RhythmPattern::RhythmType::SnareDrum) {
+			note.num = 40;					//GM配列に従ってエレクトリック・スネアのノート番号を設定
+		}
+		else if (rhythms[i].type == RhythmPattern::RhythmType::FloorTom) {
+			note.num = 43;					//GM配列に従ってフロアタムのノート番号を設定
+		}
+		else if (rhythms[i].type == RhythmPattern::RhythmType::Tom) {
+			note.num = 50;					//GM配列に従ってハイタムのノート番号を設定
+		}
+		else if (rhythms[i].type == RhythmPattern::RhythmType::CloseHiHatCymbal) {
+			note.num = 42;					//GM配列に従ってクローズハイハットのノート番号を設定
+		}
+		else if (rhythms[i].type == RhythmPattern::RhythmType::OpenHiHatCymbal) {
+			note.num = 46;					//GM配列に従ってオープンハイハットのノート番号を設定
+		}
+		else if (rhythms[i].type == RhythmPattern::RhythmType::Cymbal) {
+			note.num = 49;					//GM配列に従ってクラッシュシンバルのノート番号を設定
+		}
+
+		vector<RhythmPattern::Position> positions = rhythms[i].position;
+		for (int j = 0; j < positions.size(); ++j) {
+			note.startTime = positions[j].startTime;
+			note.length = positions[j].length;
+			note.velocity = 100;			//複雑な音量調整は今は考えない
+			mNotes.push_back(note);
+		}
+	}
+	//最後にソート処理で昇順に並べる
+	std::sort(mNotes.begin(),mNotes.end(), [](const Note& a, const Note& b) {
+		return a.startTime < b.startTime;
+		});
 }

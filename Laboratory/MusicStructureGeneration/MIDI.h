@@ -4,6 +4,7 @@
 #include"File.h"
 #include<stdio.h>
 #include <cstdint>
+#include <vector>
 
 class MIDI {
 public:
@@ -82,7 +83,7 @@ public:
 	}MIDINoteEvent, *MIDINoteEvents;
 	//MIDIデータを構築する関数。一つのトラックで時間の分解能は960で固定。引数は入力したいMIDIイベント用構造の配列とその最大サイズ。
 	int createMIDI_oneTrack(MIDINoteEvents midiEvents, int noteSize, int bmp);
-
+	int createMIDI_oneTrack(std::vector<MIDINoteEvent> midiEvents, int noteSize, int bmp);
 
 	//ここがMIDIファイル書き込みのメイン
 	int MIDIWrite(const char* filename);

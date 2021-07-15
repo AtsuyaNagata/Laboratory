@@ -12,6 +12,7 @@ class Melody
 public:
 	typedef struct Note {
 		uint8_t num;			//ノート番号
+		uint8_t velocity;		//音の大きさ
 		uint32_t startTime;		//開始時点
 		uint32_t length;		//長さ
 	}Note;
@@ -31,7 +32,8 @@ public:
 	void createMelody(const RhythmPattern* rhythmPattern, const Chords* chords);
 	//ベースラインを生成するメンバ関数
 	void createBase(const RhythmPattern* rhythmPattern, const Chords* chords, BaseAlgorithm baseAlgorithm);
-	
+	//ドラムのノート番号を割り振る
+	void createDrum(const RhythmPattern* rhythmPattern);
 
 	vector<Note> getMelodyNotes() {
 		return mNotes;
