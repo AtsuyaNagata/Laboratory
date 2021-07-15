@@ -35,4 +35,6 @@ int main()
 	ms.prepare(key, scale, parts, lengths, rhythms, chordAls, meloAls, baseAls);
 	ms.create();
 	ms.printMusicStruct();
+	ms.outputMarkDown("musicStruct.md");
+	ms.outputMIDI();
 }

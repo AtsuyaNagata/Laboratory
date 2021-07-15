@@ -25,8 +25,9 @@ void RhythmPattern::createMelodyRhythm(int size, int mostSmall) {
 
 	Rhythm rhythm;
 	rhythm.type = RhythmType::Melody;					//メロディのリズムであることを示しておく
+	mRhythm.push_back(rhythm);
 	createSplitRhythmPattern_melody(size, mostSmall);
-	vector<Position>& positions = rhythm.position;
+	vector<Position>& positions = mRhythm[0].position;
 	for (int i = 0; i < positions.size(); ++i) {
 		//適当に削除処理を行って、休符を作る
 		if ((rand() - 1) * 100 / RAND_MAX < 20) {
@@ -39,25 +40,22 @@ void RhythmPattern::createMelodyRhythm(int size, int mostSmall) {
 	std::sort(positions.begin(), positions.end(), [](const Position& a, const Position& b) {
 		return a.startTime < b.startTime;
 	});
-
-	mRhythm.push_back(rhythm);
 }
 
 //再帰的にリズムを生成する処理
 void RhythmPattern::createSplitRhythmPattern_melody(int size, int mostSmall){
 	Position position;
-	if (size == mostSmall) {
+	//sizeが最小サイズ or 確率以内ならプッシュ処理を行う
+	if (size <= mostSmall || (rand() - 1) * 100 / RAND_MAX < 100 * mostSmall * mostSmall / (size * size)) {
 		const vector<Position>& rPosition = mRhythm[0].position;			//一つ前の位置情報
 		position.length = size;
-		position.startTime = rPosition[rPosition.size() - 1].startTime + rPosition[rPosition.size() - 1].length;
-		mRhythm[0].position.push_back(position);
-		return;
-	}
-	//確率計算が妥当か要検証->そこそこ妥当
-	else if ((rand() - 1) * 100 / RAND_MAX < 100 * mostSmall * mostSmall / (size * size)) {		//一定確率で再帰に入らずに終了させる。再帰が深いほど終了しやすくなるような確率にする
-		const vector<Position>& rPosition = mRhythm[0].position;			//一つ前の位置情報
-		position.length = size;
-		position.startTime = rPosition[rPosition.size() - 1].startTime + rPosition[rPosition.size() - 1].length;
+		//サイズが0ならば
+		if (rPosition.size() == 0) {
+			position.startTime = 0;
+		}
+		else {
+			position.startTime = rPosition[rPosition.size() - 1].startTime + rPosition[rPosition.size() - 1].length;
+		}
 		mRhythm[0].position.push_back(position);
 		return;
 	}
@@ -100,11 +98,8 @@ void RhythmPattern::createDrumRhythm(DrumPattern drumPattern, uint32_t length, b
 	//インデックス5：フロアタム
 	rhythm.type = RhythmType::FloorTom;
 	mRhythm.push_back(rhythm);
-	//インデックス6：クラッシュシンバル
-	rhythm.type = RhythmType::CrashCymbal;
-	mRhythm.push_back(rhythm);
-	//インデックス7：ライドシンバル
-	rhythm.type = RhythmType::RideCymbal;
+	//インデックス6：シンバル
+	rhythm.type = RhythmType::Cymbal;
 	mRhythm.push_back(rhythm);
 
 	Position position;								//一時的に位置情報を保持するためのバッファ
@@ -183,6 +178,7 @@ void RhythmPattern::createDrumRhythm(DrumPattern drumPattern, uint32_t length, b
 
 			//8分音符6つ目の位置に音を設置するかどうか
 			if (i % 8 == 5) {
+				//スネアを8分音符4つ目に設置するかどうかを確率で判定する
 				if (randNum < 20) {
 					position.startTime = i * 128;
 					position.length = 256 / 8;

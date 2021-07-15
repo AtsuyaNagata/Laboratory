@@ -21,15 +21,17 @@ public:
 	enum class RhythmType : unsigned char {
 		None,
 
-		Melody,
-		BassDrum,
-		CloseHiHatCymbal,
-		OpenHiHatCymbal,
-		SnareDrum,
-		Tom,
-		FloorTom,
-		CrashCymbal,
-		RideCymbal
+		Melody,					//メロディ用
+		BassDrum,				//バスドラムのGeneralMIDI番号：35->Acoustic Bass Drum, 36->Bass Drum 1
+		SnareDrum,				//スネアドラムのGeneralMIDI番号：37->SideStick, 38->AcousticSnare, 39->HandCrap, 40->Electric Snare
+		FloorTom,				//フロアタムのGeneralMIDI番号：41->Low Floor Tom, 43->High Floor Tom
+		Tom,					//タムのGeneralMIDI番号：45->Low Tom, 47->Low Mid Tom, 48->High Mid Tom, 50->High Tom
+		CloseHiHatCymbal,		//クローズハイハットのGeneralMIDI番号：42->Closed Hi-Hat, ?44->Pedal Hi-Hat
+		OpenHiHatCymbal,		//オープンハイハットのGeneralMIDI番号：46->Open Hi-Hat
+		Cymbal,					//シンバルのGeneralMIDI番号：49->Crash Cymbal 1, 51->Ride Cymbal 1, 52->Chinese Cymbal, 53->Ride Bell, 55->Splash Cymbal
+
+		//ベルのGeneralMIDI番号：54->Tambourine, 56->Cowbell, 57->Crash Cymbal 2, 58->Vibraslap, 59->Ride Cymbal 2
+		//パーカッション等のGeneralMIDI番号：60～81
 	};
 
 	//ある一つのリズム要素の位置を表す構造(メロディやドラムのパターンなどに使う予定)
@@ -39,7 +41,7 @@ public:
 	}Position;
 
 	typedef struct Rhythm {
-		RhythmType type;			//リズムの種類
+		RhythmType type;				//リズムの種類
 		vector<Position> position;		//リズムの位置の集合
 	} Rhythm;
 

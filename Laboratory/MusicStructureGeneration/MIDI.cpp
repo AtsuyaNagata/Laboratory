@@ -482,11 +482,75 @@ int MIDI::createMIDI_oneTrack(MIDINoteEvents midiEvents, int noteSize, int bmp) 
 	return 0;
 }
 
+int MIDI::createMIDI_oneTrack(std::vector<MIDINoteEvent> midiEvents, int noteSize, int bmp) {
+	//下準備
+	if (mMaxTrackNum != 0) { destroy(); }						//もし実体があるなら、全部破壊してから構築する
+	mMaxTrackNum = 1;											//トラックは一つで固定する
+	mResolution = 960;											//四分音符一つ分のタイムを960分割して考える様にする
+	mTrack = new Track[1];										//一つ分のトラックの生成
+	mTrack->eventnum = noteSize + 4;							//ノートイベントだけでなく、拍子分子等を示すイベント、BMPを示すイベント、トラック名のイベント、トラックの終端を示すイベントも考慮する
+	mTrack->event = new Event[noteSize + 4];					//イベント枠を生成する
+	mMemoryMap = new uint8_t[4 + 3 + 5 + 1 + (noteSize * 2)];	//獲得するデータサイズは、イベント0、イベント1、イベント3、0x90、2バイトづつのイベントサイズの和
+
+	//データの格納処理
+	mTrack->event[0].type = EVENT::TIME_SIGNATURE;					//拍子や分子、メトロノーム間隔を設定する
+	mTrack->event[1].type = EVENT::SET_TEMPO;						//テンポを設定する
+	mTrack->event[2].type = EVENT::SEQUENCE_TRACK_NAME;				//トラック名も設定する
+	mTrack->event[0].datasize = 4;	mTrack->event[1].datasize = 3; mTrack->event[2].datasize = 5;			//それぞれのデータサイズを入れる	
+	mTrack->event[0].time = mTrack->event[1].time = mTrack->event[2].time = 0;								//どれも設定なのでタイムは0
+
+	//タイムシグネチャの値をメモリマップに仕込む(分子 = 4、 分母 = 4、 メトロノーム間隔 = 4分音符一つ分[24MIDIクロック]、 32分音符は4分音符を8分割した値 = 8)
+	mMemoryMap[0] = 0x04; mMemoryMap[1] = 0x02; mMemoryMap[2] = 0x18; mMemoryMap[3] = 0x08;
+	//テンポをセットしておく(0x07A120 = 500000μs = 120bmpになる事を考慮する)
+	int setBMP = 500000 * 120 / bmp;
+	mMemoryMap[4] = ((0x00ff0000 & setBMP) >> 16); mMemoryMap[5] = ((0x0000ff00 & setBMP) >> 8); mMemoryMap[6] = (0x000000ff & setBMP);
+	//トラック名を定める
+	mMemoryMap[7] = 'T'; mMemoryMap[8] = 'r'; mMemoryMap[9] = 'a';  mMemoryMap[10] = 'c'; mMemoryMap[11] = 'k';
+	//データ位置をメモリマップと対応付ける
+	mTrack->event[0].data = &mMemoryMap[0]; mTrack->event[1].data = &mMemoryMap[4]; mTrack->event[2].data = &mMemoryMap[7];
+
+	if (midiEvents.size() == 0) { return 1; }	//ノート格納処理を行う前にデータがないと以下の処理がバグるので、ここで落とす。「1」はデータ未定義のエラーとする
+
+	//-----------ここからノート格納処理(一行でtype datasize timeを書いてるので注意ね)-----------
+	mTrack->event[3].type = EVENT::NOTE_ON; mTrack->event[3].datasize = 3; mTrack->event[3].time = midiEvents[0].time;	//最初は省略不可能型なので特別に定義してやる
+	mMemoryMap[12] = 0x90; mMemoryMap[13] = midiEvents[0].noteNum; mMemoryMap[14] = midiEvents[0].velocity;				//データをメモリマップに配置(イベント情報ごと)
+	mTrack->event[3].data = &mMemoryMap[12];																			//データ位置を格納
+	size_t trackdataSize = 31;		//Trackのバイトサイズを入れる。前述部分で24バイト分のデータバイトを使うことが分かってるので、初期値として格納させる(デルタタイム等を考慮すると15ではない)
+	//midiEvents[0]のデルタタイムのサイズを加算する
+	if (midiEvents[0].time & 0x0fe00000) { trackdataSize += 4; }
+	else if (midiEvents[0].time & 0x001fc000) { trackdataSize += 3; }
+	else if (midiEvents[0].time & 0x00003f80) { trackdataSize += 2; }
+	else { trackdataSize += 1; }
+	//省略可能なノートイベントを格納する
+	int i;
+	for (i = 1; i < noteSize; ++i) {
+		//midiイベントについて、まずそのまま格納可能なものを入れる
+		mTrack->event[i + 3].type = EVENT::NOTE_ON;
+		mTrack->event[i + 3].time = midiEvents[i].time;
+		mTrack->event[i + 3].datasize = 2;
+		//メモリマップにデータを配置して、開始地点をevent構造に格納する
+		mMemoryMap[(i * 2) + 13] = midiEvents[i].noteNum;
+		mMemoryMap[(i * 2) + 1 + 13] = midiEvents[i].velocity;
+		mTrack->event[i + 3].data = &mMemoryMap[(i * 2) + 13];
+		//デルタタイムのバイト数を数える
+		if (midiEvents[i].time & 0x0fe00000) { trackdataSize += 4; }
+		else if (midiEvents[i].time & 0x001fc000) { trackdataSize += 3; }
+		else if (midiEvents[i].time & 0x00003f80) { trackdataSize += 2; }
+		else { trackdataSize += 1; }
+		trackdataSize += 2;
+	}
+	//トラックの終了処理を最後に入れる
+	mTrack->event[i + 3].type = EVENT::END_OF_TRACK;
+	mTrack->event[i + 3].datasize = 0; mTrack->event[i + 3].data = nullptr; mTrack->event[i + 3].time = 0;
+	mTrack->tracksize = trackdataSize;
+	return 0;
+}
+
 //-----------ここからMIDIファイル書き込みの具体的な処理-----------
 int MIDI::MIDIWrite(const char* filename) {
 	FILE* midiFile = fopen(filename, "wb");
 	if (midiFile == NULL) {
-		fprintf(stderr, "%sの読み込みに失敗しました。", filename);
+		fprintf(stderr, "%sの読み込みに失敗しました。\n", filename);
 		return 1;
 	}
 	unsigned short sbuff = 0;
@@ -542,7 +606,7 @@ void MIDI::reverceByte(void* data, unsigned char datasize) {
 	delete[] reverceData;
 }
 
-//デルタタイムの書き込み処理(4バイトが上限だと決まってるので、拡張性は意識しなくてもよいドン)
+//デルタタイムの書き込み処理(4バイトが上限だと決まってるので、拡張性は意識しなくてもよい)
 void MIDI::DeltaTimeWrite(FILE* midiFile, size_t time) {
 	unsigned char cbuff = 0;
 	if (time >= (1 << 23)) {		//1バイトにつき7ビットしか使えない事を考慮し、その上で最大サイズである4バイト分を考慮する
@@ -557,7 +621,7 @@ void MIDI::DeltaTimeWrite(FILE* midiFile, size_t time) {
 	fwrite(&(cbuff = (time & 0x0000007f)), 1, 1, midiFile);									//「0000 0000 0000 0000 0000 0111 1111」
 }
 
-//イベントに応じて書き込むバイナリを変える
+//イベントに応じて書き込むバイナリを変える(ノートイベントは省略記法に対応するために、メモリマップにそのまま記述されている)
 void MIDI::EventWrite(FILE* midiFile, MIDI::Event& eve) {
 	unsigned short metaEventBuff = 0;
 	unsigned char cbuff = 0;

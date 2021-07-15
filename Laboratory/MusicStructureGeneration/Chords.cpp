@@ -124,7 +124,7 @@ Chords::Chord Chords::makeSimpleChord(int baseIndex)
 
 	//3和音の音に必要なパラメータを設定する
 	chord.baseNoteNum = mBaseNoteNum + is1;
-	chord.baseIndex = mFloor[baseIndex];
+	chord.baseIndex = mFloor[baseIndex];				//指定されたインデックスの階数値をコードの基底音として設定する
 	chord.onIndex = mFloor[baseIndex];					//baseIndexと値が一致していたらonIndexは考えないという事
 	chord.omitIndex = 12;								//12はOmitを無効化する値
 	chord.type = specificChord(is1, is2, is3);			//内音からコードのタイプを判別する

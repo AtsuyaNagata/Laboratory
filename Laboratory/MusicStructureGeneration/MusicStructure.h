@@ -7,6 +7,8 @@
 #include "Melody.h"
 using namespace std;
 
+class MIDI;
+
 //音楽構造を取り扱うクラス。生成処理も含む
 class MusicStructure
 {
@@ -108,7 +110,8 @@ public:
 	typedef struct Note {
 		uint8_t num;			//ノートの番号の配列
 		uint32_t length;		//ノートの長さの配列(noteNumsとサイズは一致する)
-		uint32_t startTime;			//ノートの開始時点の配列
+		uint32_t startTime;		//ノートの開始時点の配列
+		uint8_t velocity;		//ノートの音の強さ
 	}Note;
 
 	//曲のパートを表現する構造
@@ -118,18 +121,11 @@ public:
 		uint32_t length;					//パートの長さ
 	} PartStruct;
 
-	//あるドラム楽器についてのリズムパターンを格納する構造
-	typedef struct DrumPattern {
-		DrumType type;						//鳴らすドラムの種類
-		vector<uint32_t> startTimes;		//各音の開始地点を格納する
-		//各音は32分音符の長さの音として出力することにした
-	};
-
 	//あるパートのリズムパターンを表現する構造
 	typedef struct RhythmStruct {
 		RhythmType type;					//リズムの種類
 		bool fill_in;						//最後にフィルインが入ってるかどうか
-		vector<DrumPattern> drumPatterns;	//各ドラム楽器のリズムパターンを格納する構造
+		vector<Note> notes;					//各音の具体的なノートの情報を格納する(各音は32分音符の長さの音として出力することにした)
 	}RhythmStruct;
 
 	//あるパートのコード列についての情報
@@ -145,7 +141,7 @@ public:
 	}MelodyStruct;
 
 	typedef struct BaseStruct {
-		BaseAlgorithm type;							//ベースラインの種類
+		BaseAlgorithm type;					//ベースラインの種類
 		vector<Note> notes;					//ノート情報
 	};
 
@@ -187,11 +183,20 @@ public:
 
 	void printMusicStruct();				//曲構造を表示する関数
 
+	//アウトプットの関数
+	void outputMarkDown(const char* filename);					//マークダウンファイルに曲の設計図情報を書き込み
+	void outputMIDI();											//MIDIファイルに書き込む処理
+
 private:
+	void writeMidiFile(const char* filename, vector<Note> notes);		//ノート列からMIDIファイルを生成する処理
+	vector<Note> chordToNote(vector<Chords::Chord> chords);
+
 	MusicStruct* mMusicStruct;				//曲の設計図
 	RhythmPattern* mRhythmPattern;			//リズムパターンを生成、管理するオブジェクト
 	Chords* mChords;						//コード列を生成、管理するオブジェクト
 	Melody* mMelody;						//メロディを生成、管理するオブジェクト
+
+	MIDI* mMIDI;							//MIDI構造を格納・出力するのに使うオブジェクト
 };
 
 #endif
