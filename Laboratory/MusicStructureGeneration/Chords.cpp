@@ -17,7 +17,7 @@ Chords::~Chords()
 }
 
 //音楽理論からコードを生成するアルゴリズム
-void Chords::create(int chordNum, uint32_t length, int key, Scale scale)
+void Chords::create(int chordNum, uint32_t length, int key, Scale scale, Algorithm algorithm)
 {
 	//初期化処理
 	mChords.clear();
@@ -29,6 +29,7 @@ void Chords::create(int chordNum, uint32_t length, int key, Scale scale)
 
 	mLength = length;
 	mChordNum = chordNum;
+	mAlgorithm = algorithm;
 
 	//スケールからメインで使用する7音を設定する処理
 	for (int i = 0; i < 7; ++i) { 
@@ -37,57 +38,109 @@ void Chords::create(int chordNum, uint32_t length, int key, Scale scale)
 	if (scale == Scale::Major) {
 		//使用するインデックスは[全全半全全全半]なので、0、2、4、5、7、9、11番となる
 		mFloor[0] = 0; mFloor[1] = 2; mFloor[2] = 4; mFloor[3] = 5; mFloor[4] = 7; mFloor[5] = 9; mFloor[6] = 11;
+		mScale = Scale::Major;
 	}
 	//マイナースケールの時
 	else if (scale == Scale::Minor) {
 		//使用するインデックスは[全半全全半全全]なので、0、2、3、5、7、8、10番となる
 		mFloor[0] = 0; mFloor[1] = 2; mFloor[2] = 3; mFloor[3] = 5; mFloor[4] = 7; mFloor[5] = 8; mFloor[6] = 10;
+		mScale = Scale::Minor;
 	}
 	//ハーモニック・マイナースケールの時
 	else if (scale == Scale::HarmonicMinor) {
 		//使用するインデックスは、0、2、3、5、7、8、11番となる
 		mFloor[0] = 0; mFloor[1] = 2; mFloor[2] = 3; mFloor[3] = 5; mFloor[4] = 7; mFloor[5] = 9; mFloor[6] = 11;
+		mScale = Scale::HarmonicMinor;
 	}
 	//メロディックマイナースケールの時
 	else if (scale == Scale::MelodicMinor) {
 		//使用するインデックスは[全全半全全全半]なので、0、2、4、5、7、9、11番となる
 		mFloor[0] = 0; mFloor[1] = 2; mFloor[2] = 3; mFloor[3] = 5; mFloor[4] = 7; mFloor[5] = 9; mFloor[6] = 11;
+		mScale = Scale::MelodicMinor;
 	}
 	//キーの高さを考慮する
 	for (int i = 0; i < 7; ++i) {
 		mFloor[i] = (mFloor[i] + key)/* % 12*/;		//オクターブを超える表現も考慮する
 	}
 
-	Chord chord;										//コードを格納する構造のインスタンス化
-	//コードの開始地点は個別に処理
-	//ⅤとⅦから開始するコードはあんまりない
-	//Ⅰが一番多い
-	//次にⅣが多い
-	//さらに次にⅥ度が多く、Ⅱ、Ⅲはレア
-	int randNum = (rand() - 1) * 100 / RAND_MAX;		//乱数の値の範囲は0～100
-	//始まりのコードを生成する処理
-	if (randNum < 30) {									//生成するコードがⅠの時の処理
-		chord = makeSimpleChord(0);						//ベースのインデックス値を引数に与える
+	//シンプルなコード生成アルゴリズムを実行する
+	if (mAlgorithm == Algorithm::Simple) {
+		Chord chord;										//コードを格納する構造のインスタンス化
+		//コードの開始地点は個別に処理
+		//ⅤとⅦから開始するコードはあんまりない
+		//Ⅰが一番多い
+		//次にⅣが多い
+		//さらに次にⅥ度が多く、Ⅱ、Ⅲはレア
+		int randNum = (rand() - 1) * 100 / RAND_MAX;		//乱数の値の範囲は0～100
+		int perNum = 0;
+		//始まりのコードを生成する処理
+		if (randNum < (perNum += 35)) {									//生成するコードがⅠの時の処理
+			chord = makeSimpleChord(0);									//ベースのインデックス値を引数に与える
+		}
+		else if (randNum < (perNum += 4)) {								//生成するコードがⅡの時の処理
+			chord = makeSimpleChord(1);
+		}
+		else if (randNum < (perNum += 1)) {								//生成するコードがⅢの時の処理
+			chord = makeSimpleChord(2);
+		}
+		else if (randNum < (perNum += 30)) {							//生成するコードがⅣの時の処理
+			chord = makeSimpleChord(3);
+		}
+		else if (randNum < (perNum += 5)) {								//生成するコードがⅤの時の処理
+			chord = makeSimpleChord(4);
+		}
+		else if (randNum < (perNum += 25)) {							//生成するコードがⅥの時の処理
+			chord = makeSimpleChord(5);
+		}																//Ⅶから生成するのはなし
+		else {															//余剰の確率はⅠにするようにしておく
+			chord = makeSimpleChord(0);
+		}
+		//最初のコードをコード列にプッシュする
+		mChords.push_back(chord);
+		for (int i = 0; i < mChordNum - 1; ++i) {						//開始時点に一つ追加したコード分を引いて生成ループを行う
+			chord = makeChordFromPrev(chord);							//前回のコードの値から次のコードを生成する
+			mChords.push_back(chord);									//生成したコードをコード列の最後尾に追加
+		}
 	}
-	else if (randNum < 60) {							//生成するコードがⅣの時の処理
-		chord = makeSimpleChord(3);
+	//おしゃれなコードを生成するアルゴリズムを実行する
+	else if (mAlgorithm == Algorithm::Fashionable) {
+		//はじめの処理は同様シンプルなコード生成と同様な処理を行う
+		Chord chord;										//コードを格納する構造のインスタンス化
+		int randNum = (rand() - 1) * 100 / RAND_MAX;		//乱数の値の範囲は0～100
+		int perNum = 0;
+		//始まりのコードを生成する処理
+		if (randNum < (perNum += 35)) {									//生成するコードがⅠの時の処理
+			chord = makeSimpleChord(0);									//ベースのインデックス値を引数に与える
+		}
+		else if (randNum < (perNum += 4)) {								//生成するコードがⅡの時の処理
+			chord = makeSimpleChord(1);
+		}
+		else if (randNum < (perNum += 1)) {								//生成するコードがⅢの時の処理
+			chord = makeSimpleChord(2);
+		}
+		else if (randNum < (perNum += 30)) {							//生成するコードがⅣの時の処理
+			chord = makeSimpleChord(3);
+		}
+		else if (randNum < (perNum += 5)) {								//生成するコードがⅤの時の処理
+			chord = makeSimpleChord(4);
+		}
+		else if (randNum < (perNum += 25)) {							//生成するコードがⅥの時の処理
+			chord = makeSimpleChord(5);
+		}																//Ⅶから生成するのはなし
+		else {															//余剰の確率はⅠにするようにしておく
+			chord = makeSimpleChord(0);
+		}
+		//最初のコードをコード列にプッシュする
+		mChords.push_back(chord);
+		for (int i = 0; i < mChordNum - 1; ++i) {						//開始時点に一つ追加したコード分を引いて生成ループを行う
+			chord = makeChordFromPrev(chord);							//前回のコードの値から次のコードを生成する
+			mChords.push_back(chord);									//生成したコードをコード列の最後尾に追加
+		}
+		mChords = changeChordFashionable(mChords);
 	}
-	else if (randNum < 90) {							//生成するコードがⅥの時の処理
-		chord = makeSimpleChord(5);
-	}
-	else if (randNum < 95) {							//生成するコードがⅥの時の処理
+	//転調を行う様な生成アルゴリズムを
+	else if (mAlgorithm == Algorithm::modulation) {
 
-		chord = makeSimpleChord(1);
-	}
-	else{												//生成するコードがⅢの時の処理
-		chord = makeSimpleChord(2);
-	}
-	//最初のコードをコード列にプッシュする
-	mChords.push_back(chord);
-
-	for(int i = 0; i < chordNum - 1; ++i) {				//開始時点に一つ追加したコード分を引いて生成ループを行う
-		chord = makeChordFromPrev(chord);				//前回のコードの値から次のコードを生成する
-		mChords.push_back(chord);						//生成したコードをコード列の最後尾に追加
 	}
 }
 
@@ -272,4 +325,163 @@ Chords::ChordType Chords::specificChord(int is1, int is2, int is3)		//isはIntern
 	}
 
 	return type;
+}
+
+//指定したインデックス以降の要素をn分シフトした要素を返す(サイズは不変とし、溢れた要素は削除する)
+vector<Chords::Chord> Chords::shiftChordRight(vector<Chord> chords, int idx, int n)
+{
+	vector<Chord> shiftChords = chords;
+
+	for (int i = idx + n; i < shiftChords.size(); ++i) {
+		shiftChords[i] = chords[i - n];
+	}
+	return shiftChords;
+}
+
+vector<Chords::Chord> Chords::changeChordFashionable(vector<Chord> chords) {
+	vector<Chord> fashionableChords = chords;
+	//単純な置き換え
+	for (int i = 0; i < chords.size(); ++i) {
+		//ここで付加されたセブンスコード等の付加情報は後述のコードの並びに応じた変換によって消えることはない。変更されることはある
+		int randNum = (rand() - 1) * 100 / RAND_MAX;
+		//50％の確率でセブンスを付加
+		if (randNum < 50) {
+			fashionableChords[i].plus = ChordPlus::Seventh;
+			//ⅠとⅣは特別にM7にする
+			if (chords[i].baseIndex == mFloor[0] || chords[i].baseIndex == mFloor[3]) {
+				fashionableChords[i].plus = ChordPlus::MajorSeventh;
+			}
+		}
+		else if (randNum < 70) {
+			//ⅠとⅣをadd9にする処理
+			if (chords[i].baseIndex == mFloor[0] || chords[i].baseIndex == mFloor[3]) {
+				fashionableChords[i].plus = ChordPlus::Add9;
+			}
+		}
+	}
+	//複数のコードの並びによって変更する(メジャーコードの時の処理)
+	if (mScale == Scale::Major) {
+		for (int i = 0; i < chords.size(); ++i) {
+			int randNum = (rand() - 1) * 100 / RAND_MAX;
+
+			//3つ連続したコードに変更するので、最後のインデックスから2つ以上小さい値しか受け付けない
+			if (i < chords.size() - 2) {
+				//[Ⅴ->Ⅰ]を[Ⅴ->Ⅰsus4->Ⅰ]にする
+				if (chords[i].baseIndex == mFloor[4] && chords[i + 1].baseIndex == mFloor[0]) {
+					// 変更確率50％
+					if (randNum < 50) {
+						chords = shiftChordRight(chords, i + 1, 1);			//シフト処理と溢れた要素の削除処理
+						fashionableChords[i] = makeSimpleChord(4);			//Ⅴのコードに変更する
+						fashionableChords[i + 1] = makeSimpleChord(0);
+						fashionableChords[i + 1].type = ChordType::Sus4;	//次のコードはⅠsus4
+						fashionableChords[i + 2] = makeSimpleChord(0);		//さらに次はⅠ
+
+						//変更した場所を飛ばして処理を続けるようにする
+						i += 2;
+						continue;
+					}
+				}
+				//コード生成で階数にないコードを生成する時は、baseIndexは-1(255)としておく
+				//[Ⅰ->Ⅱm]を[Ⅰ->Ⅰ#dim->Ⅱm]に変更する
+				if (chords[i].baseIndex == mFloor[0] && chords[i + 1].baseIndex == mFloor[1]) {
+					if (randNum < 50) {
+						chords = shiftChordRight(chords, i + 1, 1);			//シフト処理と溢れた要素の削除処理
+						fashionableChords[i] = makeSimpleChord(0);			//Ⅴのコードに変更する
+						fashionableChords[i + 1] = makeSimpleChord(0);		//一旦Ⅰのコードを作っておく
+						fashionableChords[i + 1].baseIndex = -1;			//階数にない基底音のインデックス値を表現するために異常値を格納しておく
+						fashionableChords[i + 1].baseNoteNum += 1;			//Ⅰの基底音から一音高い音を基底音とするため、1加算してる
+						fashionableChords[i + 1].type = ChordType::mb5;		//次のコードはⅠDim7なのでmb5を用意しておく
+						fashionableChords[i + 1].plus = ChordPlus::Dim7;	//Dim7を付加
+						fashionableChords[i + 2] = makeSimpleChord(1);		//さらに次はⅡm
+
+						//変更した場所を飛ばして処理を続けるようにする
+						i += 2;
+						continue;
+					}
+				}
+			}
+
+			//2つ連続したコードを変更するので、最後のインデックスから1つ以上小さい値しか受け付けない
+			if (i < chords.size() - 1) {
+				//[Ⅴ->Ⅰ]を変更する処理(変更確率20％)
+				if (chords[i].baseIndex == mFloor[4] && chords[i + 1].baseIndex == mFloor[0]) {
+					if (randNum < 20) {
+						//[Ⅴ->Ⅰ]を[Ⅱm7/Ⅴ->Ⅰ]に変更する処理(変更確率33％)
+						if (randNum < 10) {
+							fashionableChords[i] = makeSimpleChord(1);						//Ⅱm/Ⅴのコードに変更する
+							fashionableChords[i].plus = ChordPlus::Seventh;					//セブンスを付加する
+							fashionableChords[i].onIndex = 4;								//Ⅴをオンコードとする
+							//fashionableChords[i + 1] = makeSimpleChord(0);				//次のコードをⅠに変更する(fashionableChordsのⅠ7をそのまま残すため、現在はコメントアウトしてる)
+							//変更した場所を飛ばして処理を続けるようにする
+							i += 1;
+							continue;
+						}
+						//[Ⅴ->Ⅰ]を[Ⅳ->Ⅰ]に変更する処理(変更確率66％)
+						else {
+							fashionableChords[i] = makeSimpleChord(3);						//Ⅳのコードに変更する
+							//fashionableChords[i + 1] = makeSimpleChord(0);				//次のコードをⅠに変更する(Ⅰ7をそのまま残すため、現在はコメントアウトしてる)
+							if (randNum < 15) {
+								fashionableChords[i].type = ChordType::Minor;				//メジャーコードからマイナーコードにする
+								if (randNum < 13) {
+									fashionableChords[i].plus = ChordPlus::Seventh;			//セブンスをさらに追加する
+								}
+							}
+							//変更した場所を飛ばして処理を続けるようにする
+							i += 1;
+							continue;
+						}
+					}
+				}
+
+				//[Ⅳ->Ⅴ]を[Ⅳm->Ⅴ]、[Ⅳm7->Ⅴ7]、[Ⅳm6->Ⅴ7]のいずれかに変更する処理
+				if (chords[i].baseIndex == mFloor[3] && chords[i + 1].baseIndex == mFloor[4]) {				//コードがⅣの時
+					if (randNum < 30) {
+						fashionableChords[i] = makeSimpleChord(3);							//Ⅳのコードに変更する
+						fashionableChords[i].type = ChordType::Minor;						//メジャーコードからマイナーコードに変更する
+						if (randNum < 10) {
+							fashionableChords[i].plus = ChordPlus::Seventh;					//セブンスを付加する
+							//この時、次のコードをⅤ7にしておく
+							fashionableChords[i + 1] = makeSimpleChord(4);
+							fashionableChords[i + 1].plus = ChordPlus::Seventh;
+						}
+						else if (randNum < 20) {
+							fashionableChords[i].plus = ChordPlus::Six;						//シックスを付加する
+							//この時、次のコードをⅤ7にしておく
+							fashionableChords[i + 1] = makeSimpleChord(4);
+							fashionableChords[i + 1].plus = ChordPlus::Seventh;
+						}
+						//変更した場所を飛ばして処理を続けるようにする
+						i += 1;
+						continue;
+					}
+				}
+
+				//[Ⅲm->Ⅵm]を[Ⅲ7->Ⅵm7]にする
+				if (chords[i].baseIndex == mFloor[2] && chords[i + 1].baseIndex == mFloor[5]) {				//コードがⅣの時
+					if (randNum < 30) {
+						fashionableChords[i] = makeSimpleChord(2);							//Ⅳのコードに変更する
+						fashionableChords[i].type = ChordType::Major;						//マイナーコードからメジャーコードに変更する
+						fashionableChords[i + 1] = makeSimpleChord(5);
+						fashionableChords[i + 1].plus = ChordPlus::Seventh;
+						//変更した場所を飛ばして処理を続けるようにする
+						i += 1;
+						continue;
+					}
+				}
+				//[Ⅵm->Ⅱm]を[Ⅵ7->Ⅱm7]にする
+				if (chords[i].baseIndex == mFloor[5] && chords[i + 1].baseIndex == mFloor[1]) {				//コードがⅣの時
+					if (randNum < 30) {
+						fashionableChords[i] = makeSimpleChord(5);							//Ⅵのコードに変更する
+						fashionableChords[i].type = ChordType::Major;						//メジャーコードからマイナーコードに変更する
+						fashionableChords[i + 1] = makeSimpleChord(1);						//次のコードを設定
+						fashionableChords[i + 1].plus = ChordPlus::Seventh;					//セブンスを付加
+						//変更した場所を飛ばして処理を続けるようにする
+						i += 1;
+						continue;
+					}
+				}
+			}
+		}
+	}
+	return fashionableChords;
 }
